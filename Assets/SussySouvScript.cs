@@ -28,7 +28,7 @@ public class SussySouvScript : MonoBehaviour
         }
     }
 #else
-    public static string AskQuestions { private get; set; }
+    public static bool AskQuestions { private get; set; }
 #endif
     public static string TDMAnswer { private get; set; }
     public static string TDMQuestion { private get; set; }
