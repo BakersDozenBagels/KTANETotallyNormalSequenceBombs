@@ -1049,11 +1049,9 @@ TextMesh:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1584909907240394}
-  m_Text: 'What was
+  m_Text: 'Totally
 
-    transmitted for
-
-    magenta?'
+    normal.'
   m_OffsetZ: 0
   m_CharacterSize: 1
   m_LineSpacing: 0.525

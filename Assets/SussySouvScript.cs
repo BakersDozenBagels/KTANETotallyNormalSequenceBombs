@@ -81,7 +81,7 @@ public class SussySouvScript : MonoBehaviour
         }
         yield return new WaitForSeconds(Random.Range(.8f, 1.5f));
 
-        _mainText.text = "What was the\nresponse for the\n" + FMQuestion + " stage in Fast\nMath?";
+        _mainText.text = "What was the\nTwo Bits response\nfor the " + FMQuestion + " stage\nin Fast Math?";
         List<string> numanswers = Enumerable.Range(0, 100).Select(i => i.ToString()).Except(new string[] { FMAnswer }).OrderBy(_ => Random.value).Take(5).Concat(new string[] { FMAnswer }).OrderBy(_ => Random.value).ToList();
         _correctAnswer = numanswers.IndexOf(FMAnswer);
         for(int i = 0; i < 6; ++i)
@@ -89,7 +89,7 @@ public class SussySouvScript : MonoBehaviour
         _answers.gameObject.SetActive(true);
 
         GetComponent<KMAudio>().PlaySoundAtTransform("Question", transform);
-        Debug.Log("[Suspicious Souvenir #" + _id + @"] Asking question: ""What was the response for the " + FMQuestion + @" stage in Fast Math?""");
+        Debug.Log("[Suspicious Souvenir #" + _id + @"] Asking question: ""What was the Two Bits response for the " + FMQuestion + @" stage in Fast Math?""");
 
 #if SUSSYDEBUG
         _answers.GetChild(_correctAnswer).GetComponent<TextMesh>().color = Color.red;

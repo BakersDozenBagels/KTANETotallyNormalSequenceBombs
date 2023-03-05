@@ -330,6 +330,7 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
 
     private static IEnumerator EnsureHarmony()
     {
+        Debug.Log("[Totally Normal Sequence Bombs] Version 0.4");
         if(_harmed)
             yield break;
 
@@ -399,7 +400,7 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         Type t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("BombComponent", false)).First(tp => tp != null);
         FieldInfo fi = t.GetField("IsSolved", BindingFlags.Public | BindingFlags.Instance);
 
-        MethodInfo mi = typeof(TotallyNotSussyServiceScript).GetMethod("MCShenanigans", BindingFlags.Public | BindingFlags.Static);
+        MethodInfo mi = typeof(TotallyNotSussyServiceScript).GetMethod("MCShenanigans", BindingFlags.NonPublic | BindingFlags.Static);
         foreach(CodeInstruction inst in instructions)
         {
             yield return inst;
@@ -474,7 +475,8 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
 
     private static void TDTChange(TextMesh ___Symbol, int ____location)
     {
-        ___Symbol.gameObject.SetActive(false);
+        if(_tdNoSubmit)
+            ___Symbol.gameObject.SetActive(false);
         _tdChange(____location);
     }
 

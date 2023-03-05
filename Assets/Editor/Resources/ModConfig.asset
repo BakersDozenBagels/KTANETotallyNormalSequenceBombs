@@ -15,6 +15,6 @@ MonoBehaviour:
   title: Totally Normal Sequence Bombs
   author: BakersDozenBagels
   description: It's best to go in blind. I promise it's not that bad.
-  version: 0.1
+  version: 0.4
   outputFolder: build
   previewImage: {fileID: 0}
