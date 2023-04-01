@@ -16,3 +16,4 @@ MonoBehaviour:
   - Title: Totally Normal
     MissionIDs:
     - sequenceBombs
+    - tricycle

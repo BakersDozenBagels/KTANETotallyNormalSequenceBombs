@@ -14,16 +14,22 @@ using System.Reflection.Emit;
 [RequireComponent(typeof(KMService))]
 public class TotallyNotSussyServiceScript : MonoBehaviour
 {
+    private const string VersionString = "1.0";
+
     [SerializeField]
     private GameObject _prefab;
 
     private Dictionary<string, object> _module;
     private Coroutine _hook;
 
-    private static bool _tdNoSubmit, _harmed, _tbSolved, _isMission;
+    private static bool _tdNoSubmit, _harmed, _harmedTrike, _tbSolved, _isMission, _isTricycle;
     private static Action<int> _tdChange = _ => { }, _ssPress = _ => { };
-    private static List<string> _fmStages = new List<string>();
+    private static List<string> _fmStages = new List<string>(), _orgDisplays = new List<string>();
     private static Action<object, string> _mcSet;
+    private static int _bossOrg;
+    private static List<MonoBehaviour> _orgs = new List<MonoBehaviour>();
+    private static List<string> _solvedModules = new List<string>();
+    private static List<int[]> _laundrySolutions = new List<int[]>();
 
     private static int Verify(object settings)
     {
@@ -54,7 +60,7 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
 
 #if SUSSYDEBUG
         if(state == KMGameInfo.State.Setup)
-            GetComponent<KMGameCommands>().StartMission("mod_totallyNormalSequenceBombs_sequenceBombs", Random.Range(0, int.MaxValue).ToString());
+            GetComponent<KMGameCommands>().StartMission("mod_totallyNormalSequenceBombs_tricycle", Random.Range(0, int.MaxValue).ToString());
 #endif
     }
 
@@ -64,21 +70,244 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
             StopCoroutine(_hook);
 
         _isMission = false;
+        _isTricycle = false;
         _tdNoSubmit = false;
         _tdChange = _ => { };
         _ssPress = _ => { };
         _tbSolved = false;
         _fmStages = new List<string>();
+        _orgs.Clear();
+        _solvedModules.Clear();
+        _laundrySolutions.Clear();
         SussySouvScript.AskQuestions = false;
+    }
+
+    private IEnumerator HookTricycle()
+    {
+        Debug.Log("[Tricycle: Unhinged: Rehinged: Juxtahinged] Version " + VersionString);
+        _isTricycle = true;
+
+        //Harmony.DEBUG = true;
+        Harmony harm = new Harmony("Tricycle.Unhinged.Rehinged.Juxtahinged");
+        Type t;
+        MethodInfo mi;
+
+        if(!_harmedTrike)
+        {
+            do
+            {
+                t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("TheTwinScript", false)).FirstOrDefault(tp => tp != null);
+                if(t == null)
+                    yield return null;
+            }
+            while(t == null);
+            t = t.GetNestedType("\u003CTradeInfo\u003Ec__Iterator2", BindingFlags.NonPublic);
+
+            mi = t.GetMethod("MoveNext", BindingFlags.Public | BindingFlags.Instance);
+            harm.Patch(mi, transpiler: new HarmonyMethod(typeof(TotallyNotSussyServiceScript).GetMethod("TwinTranspiler", BindingFlags.Static | BindingFlags.NonPublic)));
+        }
+
+        //do
+        //{
+        //    t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("Laundry", false)).FirstOrDefault(tp => tp != null);
+        //    if(t == null)
+        //        yield return null;
+        //}
+        //while(t == null);
+
+        //mi = t.GetMethod("UseCoin", BindingFlags.NonPublic | BindingFlags.Instance);
+        //harm.Patch(mi, prefix: new HarmonyMethod(GetType().GetMethod("LaundryPrefix", BindingFlags.Static | BindingFlags.NonPublic)));
+
+        do
+        {
+            t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("DividedSquaresModule", false)).FirstOrDefault(tp => tp != null);
+            if(t == null)
+                yield return null;
+        }
+        while(t == null);
+
+        MonoBehaviour[] ds;
+        do
+        {
+            ds = FindObjectsOfType(t).Cast<MonoBehaviour>().Where(d => d.gameObject.activeInHierarchy).ToArray();
+            yield return null;
+        }
+        while(ds.Length < 3);
+        mi = t.GetMethod("UpdateSolved", BindingFlags.NonPublic | BindingFlags.Instance);
+        foreach(MonoBehaviour d in ds)
+            StartCoroutine((IEnumerator)mi.Invoke(d, new object[] { 3, 0 }));
+
+        do
+        {
+            t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("OrganizationScript", false)).FirstOrDefault(tp => tp != null);
+            if(t == null)
+                yield return null;
+        }
+        while(t == null);
+
+        if(!_harmedTrike)
+        {
+            mi = t.GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            harm.Patch(mi, prefix: new HarmonyMethod(GetType().GetMethod("OrgPrefix", BindingFlags.Static | BindingFlags.NonPublic)));
+        }
+
+        do
+        {
+            _orgs = FindObjectsOfType(t).Cast<MonoBehaviour>().Where(d => d.gameObject.activeInHierarchy).ToList();
+            yield return null;
+        }
+        while(_orgs.Count < 3);
+        MonoBehaviour bossorg = _orgs.First();
+        _bossOrg = (int)t.GetField("moduleId", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(bossorg);
+
+        yield return null;
+        yield return null;
+
+        List<string> mods = new List<string>() {
+            "Metamem", "Macro Memory", "Netherite", "The Stare", "Laundry", "Warning Signs", "Big Circle",
+            "Metamem", "Macro Memory", "Netherite", "The Stare", "Laundry", "Warning Signs", "Big Circle",
+            "Metamem", "Macro Memory", "Netherite", "The Stare", "Laundry", "Warning Signs", "Big Circle",
+            "Black Hole", "Black Hole",
+            "White Hole", "White Hole",
+            "Masyu", "UraMasyu",
+            "Masyu", "UraMasyu",
+            "Clipping Triangles",
+            "Flipping Triangles",
+            "Slipping Triangles",
+            "Tipping Triangles"
+        };
+
+        _orgDisplays = mods.Distinct().ToList();
+        _orgDisplays = _orgDisplays.OrderBy(_ => Random.value).Take(3).ToList();
+        for(int i = 0; i < _orgs.Count; i++)
+        {
+            //Debug.Log("<><><>");
+            //Debug.Log(t);
+            //Debug.Log(t.GetField("module", BindingFlags.Public | BindingFlags.Instance));
+            //Debug.Log(_orgs[i]);
+            //Debug.Log(_orgs[i].GetComponent(t));
+            //Debug.Log(t.GetField("module", BindingFlags.Public | BindingFlags.Instance).GetValue(_orgs[i].GetComponent(t)));
+            //Debug.Log(((GameObject)t.GetField("module", BindingFlags.Public | BindingFlags.Instance).GetValue(_orgs[i].GetComponent(t))).GetComponent<UnityEngine.UI.Text>());
+            ((GameObject)t.GetField("module", BindingFlags.Public | BindingFlags.Instance).GetValue(_orgs[i].GetComponent(t))).GetComponent<UnityEngine.UI.Text>().text = _orgDisplays[i];
+        }
+    }
+
+    //private static void LaundryPrefix(
+    //    Enum[][] ___solutions,
+    //    KMBombInfo ___bombInfo,
+    //    KMBombModule ___bombModule,
+    //    int ___leftKnobPos,
+    //    int ___rightKnobPos,
+    //    int ___ironingTextPos,
+    //    int ___specialTextPos
+    //    )
+    //{
+    //    if(!_isTricycle)
+    //        return;
+
+    //    int solves = ___bombInfo.GetSolvedModuleNames().Count % 6;
+    //    Enum[] solution = ___solutions[solves];
+    //    if(solution.Length == 1)
+    //        return; // Unicorn
+
+    //    if(_laundrySolutions.Any(s => s.SequenceEqual(new int[] { ___leftKnobPos, ___rightKnobPos, ___ironingTextPos, ___specialTextPos })))
+    //    {
+    //        ___bombModule.HandleStrike();
+    //        return;
+    //    }
+
+    //    if(solution.Cast<int>().SequenceEqual(new int[] { ___leftKnobPos, ___rightKnobPos, ___ironingTextPos, ___specialTextPos }))
+    //        _laundrySolutions.Add(new int[] { ___leftKnobPos, ___rightKnobPos, ___ironingTextPos, ___specialTextPos });
+    //}
+
+    private static bool OrgPrefix(KMBombInfo ___bomb, ref int ___ticker, int ___moduleId)
+    {
+        if(!_isTricycle)
+            return true;
+
+        if(___moduleId != _bossOrg)
+            return false;
+
+        if(++___ticker != 20)
+            return false;
+        ___ticker = 0;
+
+        int progress = ___bomb.GetSolvedModuleNames().Count;
+
+        List<string> temp = ___bomb.GetSolvedModuleNames();
+        foreach(string s in _solvedModules)
+            temp.Remove(s);
+        _solvedModules = ___bomb.GetSolvedModuleNames();
+        if(temp.Count == 0)
+            return false;
+        string name = temp[0];
+        List<string> ignored = new List<string>() { "Organization", "The Twin", "Black", "White", "Divided Squares", "Supermassive Black Hole" };
+        if(!_orgDisplays.Contains(name) && !ignored.Contains(name))
+            _orgs[0].GetComponent<KMBombModule>().HandleStrike();
+
+        List<string> mods = new List<string>() {
+            "Metamem", "Macro Memory", "Netherite", "The Stare", "Laundry", "Warning Signs", "Big Circle",
+            "Metamem", "Macro Memory", "Netherite", "The Stare", "Laundry", "Warning Signs", "Big Circle",
+            "Metamem", "Macro Memory", "Netherite", "The Stare", "Laundry", "Warning Signs", "Big Circle",
+            "Black Hole", "Black Hole",
+            "White Hole", "White Hole",
+            "Masyu", "UraMasyu",
+            "Masyu", "UraMasyu",
+            "Clipping Triangles",
+            "Flipping Triangles",
+            "Slipping Triangles",
+            "Tipping Triangles"
+        };
+        foreach(string mod in ___bomb.GetSolvedModuleNames())
+            mods.Remove(mod);
+
+        _orgDisplays = mods.Distinct().ToList();
+        if(_orgDisplays.Count == 0)
+        {
+            foreach(MonoBehaviour org in _orgs)
+                org.GetComponent<KMBombModule>().HandlePass();
+            _orgDisplays = Enumerable.Repeat("No Modules :)", 3).ToList();
+        }
+        while(_orgDisplays.Count < 3)
+            _orgDisplays.Add(_orgDisplays.PickRandom());
+        _orgDisplays = _orgDisplays.OrderBy(_ => Random.value).Take(3).ToList();
+        Type t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("OrganizationScript", false)).FirstOrDefault(tp => tp != null);
+        for(int i = 0; i < _orgs.Count; i++)
+            ((GameObject)t.GetField("module", BindingFlags.Public | BindingFlags.Instance).GetValue(_orgs[i].GetComponent(t))).GetComponent<UnityEngine.UI.Text>().text = _orgDisplays[i];
+
+        return false;
+    }
+
+    private static IEnumerable<CodeInstruction> TwinTranspiler(IEnumerable<CodeInstruction> instructions)
+    {
+        Type t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("TheTwinScript", false)).FirstOrDefault(tp => tp != null);
+        FieldInfo fi = t.GetField("_swapCase", BindingFlags.NonPublic | BindingFlags.Instance);
+        ParameterExpression p = Expression.Parameter(typeof(int), "i");
+        Expression<Func<int, int>> e = Expression.Lambda<Func<int, int>>(
+            Expression.Call(typeof(TotallyNotSussyServiceScript).GetMethod("IsTricycle", BindingFlags.NonPublic | BindingFlags.Static), p),
+            p
+            );
+        foreach(CodeInstruction i in instructions)
+        {
+            if(i.StoresField(fi))
+                yield return CodeInstruction.Call(e);
+            yield return i;
+        }
+    }
+
+    private static int IsTricycle(int i)
+    {
+        return _isTricycle ? 0 : i;
     }
 
     private IEnumerator CheckAndHookBomb()
     {
         yield return null;
+        if(KTMissionGetter.Mission.ID == "mod_totallyNormalSequenceBombs_tricycle")
+            StartCoroutine(HookTricycle());
         if(KTMissionGetter.Mission.ID != "mod_totallyNormalSequenceBombs_sequenceBombs")
             yield break;
         _isMission = true;
-
 
         StartCoroutine(EnsureHarmony());
 
@@ -255,7 +484,6 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         Dictionary<string, int> qrs = (Dictionary<string, int>)tb.GetType().GetField("queryResponses", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(tb);
         int stage = Random.Range(0, _fmStages.Count);
         SussySouvScript.FMQuestion = new string[] { "first", "second", "third", "fourth", "fifth" }[stage];
-        Debug.Log("<><><>" + _fmStages.Join(","));
         SussySouvScript.FMAnswer = qrs[(_fmStages[stage][0] + _fmStages[stage][2].ToString()).ToLowerInvariant()].ToString();
     }
 
@@ -330,7 +558,7 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
 
     private static IEnumerator EnsureHarmony()
     {
-        Debug.Log("[Totally Normal Sequence Bombs] Version 0.4");
+        Debug.Log("[Totally Normal Sequence Bombs] Version " + VersionString);
         if(_harmed)
             yield break;
 

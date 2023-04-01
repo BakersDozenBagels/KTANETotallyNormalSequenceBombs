@@ -12,9 +12,19 @@ MonoBehaviour:
   m_Name: ModConfig
   m_EditorClassIdentifier: 
   id: totallyNormalSequenceBombs
-  title: Totally Normal Sequence Bombs
+  title: Modified Bombs
   author: BakersDozenBagels
-  description: It's best to go in blind. I promise it's not that bad.
-  version: 0.4
+  description: 'A collection a missions that don''t follow the standard rules.
+
+
+    Totally Normal Sequence Bombs:
+
+    It''s best to go in blind. I promise it''s not that bad.
+
+
+    Tricycle: Unhinged: Rehinged: Juxtahinged:
+
+    Some modules act differently. Spoooooky!'
+  version: 1.0
   outputFolder: build
-  previewImage: {fileID: 0}
+  previewImage: {fileID: 2800000, guid: c2ea1b80db465f043837064e081e3eaf, type: 3}
