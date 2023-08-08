@@ -1,4 +1,4 @@
-﻿//#define SUSSYDEBUG
+﻿#define SUSSYDEBUG
 
 using System.Collections;
 using System.Collections.Generic;
@@ -14,15 +14,17 @@ using System.Reflection.Emit;
 [RequireComponent(typeof(KMService))]
 public class TotallyNotSussyServiceScript : MonoBehaviour
 {
-    private const string VersionString = "1.0";
+    private const string VersionString = "2.0";
 
     [SerializeField]
     private GameObject _prefab;
+    [SerializeField]
+    private GameObject _cover, _casing;
 
     private Dictionary<string, object> _module;
     private Coroutine _hook;
 
-    private static bool _tdNoSubmit, _harmed, _harmedTrike, _tbSolved, _isMission, _isTricycle;
+    private static bool _tdNoSubmit, _harmed, _harmedTrike, _harmedNeedy, _tbSolved, _isMission, _isTricycle;
     private static Action<int> _tdChange = _ => { }, _ssPress = _ => { };
     private static List<string> _fmStages = new List<string>(), _orgDisplays = new List<string>();
     private static Action<object, string> _mcSet;
@@ -30,12 +32,13 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
     private static List<MonoBehaviour> _orgs = new List<MonoBehaviour>();
     private static List<string> _solvedModules = new List<string>();
     private static List<int[]> _laundrySolutions = new List<int[]>();
+    private static GameObject s_casing;
 
     private static int Verify(object settings)
     {
         IList pools = (IList)settings.GetType().GetField("ComponentPools", BindingFlags.Public | BindingFlags.Instance).GetValue(settings);
         List<string> pool = (List<string>)pools[0].GetType().GetField("ModTypes", BindingFlags.Public | BindingFlags.Instance).GetValue(pools[0]);
-        if(KTMissionGetter.Mission.ID == "mod_totallyNormalSequenceBombs_sequenceBombs" && pool.Count >= 1 && pool[0] == "SouvenirModule")
+        if (KTMissionGetter.Mission.ID == "mod_totallyNormalSequenceBombs_sequenceBombs" && pool.Count >= 1 && pool[0] == "SouvenirModule")
             return 1;
         return 0;
     }
@@ -55,18 +58,18 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
     private void StateChange(KMGameInfo.State state)
     {
         ResetState();
-        if(state == KMGameInfo.State.Gameplay)
+        if (state == KMGameInfo.State.Gameplay)
             _hook = StartCoroutine(CheckAndHookBomb());
 
 #if SUSSYDEBUG
-        if(state == KMGameInfo.State.Setup)
-            GetComponent<KMGameCommands>().StartMission("mod_totallyNormalSequenceBombs_tricycle", Random.Range(0, int.MaxValue).ToString());
+        if (state == KMGameInfo.State.Setup)
+            GetComponent<KMGameCommands>().StartMission("mod_totallyNormalSequenceBombs_needyShuffle", Random.Range(0, int.MaxValue).ToString());
 #endif
     }
 
     private void ResetState()
     {
-        if(_hook != null)
+        if (_hook != null)
             StopCoroutine(_hook);
 
         _isMission = false;
@@ -82,6 +85,42 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         SussySouvScript.AskQuestions = false;
     }
 
+    private IEnumerator HookNeedyShuffle()
+    {
+        Debug.Log("[Needy Shuffle] Version " + VersionString);
+        throw new NotImplementedException();
+    }
+
+    private IEnumerator ModifyGeneration()
+    {
+        //Harmony.DEBUG = true;
+        Harmony harm = new Harmony("NeedyShuffle");
+        if (!_harmedNeedy)
+        {
+            s_casing = _casing;
+            Type t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("GameplayState", false)).FirstOrDefault(tp => tp != null);
+            MethodInfo mi = t.GetMethod("SpawnBomb", BindingFlags.Public | BindingFlags.Instance);
+            harm.Patch(mi,
+                prefix: new HarmonyMethod(typeof(TotallyNotSussyServiceScript).GetMethod("ForceCasePrefix", BindingFlags.NonPublic | BindingFlags.Static)),
+                postfix: new HarmonyMethod(typeof(TotallyNotSussyServiceScript).GetMethod("ForceCasePostfix", BindingFlags.NonPublic | BindingFlags.Static)));
+        }
+
+        throw new NotImplementedException();
+    }
+
+    private static void ForceCasePrefix(object ___Mission, ref object ___GameplayRoomPrefabOverride, out object __state)
+    {
+        __state = ___GameplayRoomPrefabOverride;
+        string id = (string)___Mission.GetType().GetProperty("ID", BindingFlags.Public | BindingFlags.Instance).GetValue(___Mission, new object[0]);
+        if (id == "mod_totallyNormalSequenceBombs_needyShuffle")
+            ___GameplayRoomPrefabOverride = s_casing;
+    }
+
+    private static void ForceCasePostfix(ref object ___GameplayRoomPrefabOverride, object __state)
+    {
+        ___GameplayRoomPrefabOverride = __state;
+    }
+
     private IEnumerator HookTricycle()
     {
         Debug.Log("[Tricycle: Unhinged: Rehinged: Juxtahinged] Version " + VersionString);
@@ -92,15 +131,15 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         Type t;
         MethodInfo mi;
 
-        if(!_harmedTrike)
+        if (!_harmedTrike)
         {
             do
             {
                 t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("TheTwinScript", false)).FirstOrDefault(tp => tp != null);
-                if(t == null)
+                if (t == null)
                     yield return null;
             }
-            while(t == null);
+            while (t == null);
             t = t.GetNestedType("\u003CTradeInfo\u003Ec__Iterator2", BindingFlags.NonPublic);
 
             mi = t.GetMethod("MoveNext", BindingFlags.Public | BindingFlags.Instance);
@@ -121,10 +160,10 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         do
         {
             t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("DividedSquaresModule", false)).FirstOrDefault(tp => tp != null);
-            if(t == null)
+            if (t == null)
                 yield return null;
         }
-        while(t == null);
+        while (t == null);
 
         MonoBehaviour[] ds;
         do
@@ -132,20 +171,20 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
             ds = FindObjectsOfType(t).Cast<MonoBehaviour>().Where(d => d.gameObject.activeInHierarchy).ToArray();
             yield return null;
         }
-        while(ds.Length < 3);
+        while (ds.Length < 3);
         mi = t.GetMethod("UpdateSolved", BindingFlags.NonPublic | BindingFlags.Instance);
-        foreach(MonoBehaviour d in ds)
+        foreach (MonoBehaviour d in ds)
             StartCoroutine((IEnumerator)mi.Invoke(d, new object[] { 3, 0 }));
 
         do
         {
             t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("OrganizationScript", false)).FirstOrDefault(tp => tp != null);
-            if(t == null)
+            if (t == null)
                 yield return null;
         }
-        while(t == null);
+        while (t == null);
 
-        if(!_harmedTrike)
+        if (!_harmedTrike)
         {
             mi = t.GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
             harm.Patch(mi, prefix: new HarmonyMethod(GetType().GetMethod("OrgPrefix", BindingFlags.Static | BindingFlags.NonPublic)));
@@ -156,7 +195,7 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
             _orgs = FindObjectsOfType(t).Cast<MonoBehaviour>().Where(d => d.gameObject.activeInHierarchy).ToList();
             yield return null;
         }
-        while(_orgs.Count < 3);
+        while (_orgs.Count < 3);
         MonoBehaviour bossorg = _orgs.First();
         _bossOrg = (int)t.GetField("moduleId", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(bossorg);
 
@@ -179,7 +218,7 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
 
         _orgDisplays = mods.Distinct().ToList();
         _orgDisplays = _orgDisplays.OrderBy(_ => Random.value).Take(3).ToList();
-        for(int i = 0; i < _orgs.Count; i++)
+        for (int i = 0; i < _orgs.Count; i++)
         {
             //Debug.Log("<><><>");
             //Debug.Log(t);
@@ -222,27 +261,27 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
 
     private static bool OrgPrefix(KMBombInfo ___bomb, ref int ___ticker, int ___moduleId)
     {
-        if(!_isTricycle)
+        if (!_isTricycle)
             return true;
 
-        if(___moduleId != _bossOrg)
+        if (___moduleId != _bossOrg)
             return false;
 
-        if(++___ticker != 20)
+        if (++___ticker != 20)
             return false;
         ___ticker = 0;
 
         int progress = ___bomb.GetSolvedModuleNames().Count;
 
         List<string> temp = ___bomb.GetSolvedModuleNames();
-        foreach(string s in _solvedModules)
+        foreach (string s in _solvedModules)
             temp.Remove(s);
         _solvedModules = ___bomb.GetSolvedModuleNames();
-        if(temp.Count == 0)
+        if (temp.Count == 0)
             return false;
         string name = temp[0];
         List<string> ignored = new List<string>() { "Organization", "The Twin", "Black", "White", "Divided Squares", "Supermassive Black Hole" };
-        if(!_orgDisplays.Contains(name) && !ignored.Contains(name))
+        if (!_orgDisplays.Contains(name) && !ignored.Contains(name))
             _orgs[0].GetComponent<KMBombModule>().HandleStrike();
 
         List<string> mods = new List<string>() {
@@ -258,21 +297,21 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
             "Slipping Triangles",
             "Tipping Triangles"
         };
-        foreach(string mod in ___bomb.GetSolvedModuleNames())
+        foreach (string mod in ___bomb.GetSolvedModuleNames())
             mods.Remove(mod);
 
         _orgDisplays = mods.Distinct().ToList();
-        if(_orgDisplays.Count == 0)
+        if (_orgDisplays.Count == 0)
         {
-            foreach(MonoBehaviour org in _orgs)
+            foreach (MonoBehaviour org in _orgs)
                 org.GetComponent<KMBombModule>().HandlePass();
             _orgDisplays = Enumerable.Repeat("No Modules :)", 3).ToList();
         }
-        while(_orgDisplays.Count < 3)
+        while (_orgDisplays.Count < 3)
             _orgDisplays.Add(_orgDisplays.PickRandom());
         _orgDisplays = _orgDisplays.OrderBy(_ => Random.value).Take(3).ToList();
         Type t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("OrganizationScript", false)).FirstOrDefault(tp => tp != null);
-        for(int i = 0; i < _orgs.Count; i++)
+        for (int i = 0; i < _orgs.Count; i++)
             ((GameObject)t.GetField("module", BindingFlags.Public | BindingFlags.Instance).GetValue(_orgs[i].GetComponent(t))).GetComponent<UnityEngine.UI.Text>().text = _orgDisplays[i];
 
         return false;
@@ -287,9 +326,9 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
             Expression.Call(typeof(TotallyNotSussyServiceScript).GetMethod("IsTricycle", BindingFlags.NonPublic | BindingFlags.Static), p),
             p
             );
-        foreach(CodeInstruction i in instructions)
+        foreach (CodeInstruction i in instructions)
         {
-            if(i.StoresField(fi))
+            if (i.StoresField(fi))
                 yield return CodeInstruction.Call(e);
             yield return i;
         }
@@ -303,9 +342,11 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
     private IEnumerator CheckAndHookBomb()
     {
         yield return null;
-        if(KTMissionGetter.Mission.ID == "mod_totallyNormalSequenceBombs_tricycle")
+        if (KTMissionGetter.Mission.ID == "mod_totallyNormalSequenceBombs_tricycle")
             StartCoroutine(HookTricycle());
-        if(KTMissionGetter.Mission.ID != "mod_totallyNormalSequenceBombs_sequenceBombs")
+        if (KTMissionGetter.Mission.ID == "mod_totallyNormalSequenceBombs_needyShuffle")
+            StartCoroutine(HookNeedyShuffle());
+        if (KTMissionGetter.Mission.ID != "mod_totallyNormalSequenceBombs_sequenceBombs")
             yield break;
         _isMission = true;
 
@@ -336,10 +377,10 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         do
         {
             mc = FindObjectsOfType(typeof(MonoBehaviour)).FirstOrDefault(m => ((MonoBehaviour)m).isActiveAndEnabled && m.GetType().Name == "MorseCodeComponent") as MonoBehaviour;
-            if(mc == null)
+            if (mc == null)
                 yield return null;
         }
-        while(mc == null);
+        while (mc == null);
 
         Func<bool> mcSolved = Expression.Lambda<Func<bool>>(
             Expression.Field(
@@ -347,18 +388,18 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
                 mc.GetType().GetField("IsSolved", BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
             )).Compile();
 
-        while(!mcSolved())
+        while (!mcSolved())
             yield return null;
 
         Coroutine r = null;
         Action play = () =>
         {
-            if(r != null)
+            if (r != null)
                 StopCoroutine(r);
             r = StartCoroutine(mc.GetType().GetMethod("LoopRoutine", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(mc, new object[0]) as IEnumerator);
         };
 
-        if(_mcSet == null)
+        if (_mcSet == null)
         {
             FieldInfo fi = mc.GetType().GetField("chosenWord", BindingFlags.NonPublic | BindingFlags.Instance);
 
@@ -381,13 +422,13 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         do
         {
             ss = FindObjectsOfType(typeof(MonoBehaviour)).FirstOrDefault(m => ((MonoBehaviour)m).isActiveAndEnabled && m.GetType().Name == "SimonSendsModule") as MonoBehaviour;
-            if(ss == null)
+            if (ss == null)
                 yield return null;
         }
-        while(ss == null);
+        while (ss == null);
         KMSelectable[] buttons = (KMSelectable[])ss.GetType().GetField("Buttons", BindingFlags.Public | BindingFlags.Instance).GetValue(ss);
 
-        for(int i = 0; i < buttons.Length; ++i)
+        for (int i = 0; i < buttons.Length; ++i)
         {
             int j = i;
             buttons[j].OnInteract += () => { SSPress(j); return false; };
@@ -400,10 +441,10 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         do
         {
             ss = FindObjectsOfType(typeof(MonoBehaviour)).FirstOrDefault(m => ((MonoBehaviour)m).isActiveAndEnabled && m.GetType().Name == "SimonSendsModule") as MonoBehaviour;
-            if(ss == null)
+            if (ss == null)
                 yield return null;
         }
-        while(ss == null);
+        while (ss == null);
 
         Func<bool> ssSolved = Expression.Lambda<Func<bool>>(
             Expression.Equal(
@@ -415,7 +456,7 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
                 )
             ).Compile();
 
-        while(!ssSolved())
+        while (!ssSolved())
             yield return null;
     }
 
@@ -430,10 +471,10 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         do
         {
             tb = FindObjectsOfType(typeof(MonoBehaviour)).FirstOrDefault(m => ((MonoBehaviour)m).isActiveAndEnabled && m.GetType().Name == "TwoBitsModule") as MonoBehaviour;
-            if(tb == null)
+            if (tb == null)
                 yield return null;
         }
-        while(tb == null);
+        while (tb == null);
 
         Func<bool> tbsolved = Expression.Lambda<Func<bool>>(
             Expression.Equal(
@@ -446,7 +487,7 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
                 Expression.Constant(7)
             )).Compile();
 
-        while(!tbsolved())
+        while (!tbsolved())
             yield return null;
 
         object en = tb.GetType().GetNestedType("State", BindingFlags.NonPublic).GetField("Idle", BindingFlags.Public | BindingFlags.Static).GetValue(null);
@@ -460,10 +501,10 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         do
         {
             fm = FindObjectsOfType(typeof(MonoBehaviour)).FirstOrDefault(m => ((MonoBehaviour)m).isActiveAndEnabled && m.GetType().Name == "FastMathModule") as MonoBehaviour;
-            if(fm == null)
+            if (fm == null)
                 yield return null;
         }
-        while(fm == null);
+        while (fm == null);
 
         Func<bool> fmsolved = Expression.Lambda<Func<bool>>(
             Expression.Field(
@@ -471,7 +512,7 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
                 fm.GetType().GetField("_isSolved", BindingFlags.NonPublic | BindingFlags.Instance)
             )).Compile();
 
-        while(!fmsolved())
+        while (!fmsolved())
             yield return null;
 
         CalcTwoBits();
@@ -493,10 +534,10 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         do
         {
             tdt = FindObjectsOfType(typeof(MonoBehaviour)).FirstOrDefault(m => ((MonoBehaviour)m).isActiveAndEnabled && m.GetType().Name == "ThreeDTunnels") as MonoBehaviour;
-            if(tdt == null)
+            if (tdt == null)
                 yield return null;
         }
-        while(tdt == null);
+        while (tdt == null);
 
         Func<bool> tdsolved = Expression.Lambda<Func<bool>>(
             Expression.Field(
@@ -504,7 +545,7 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
                 tdt.GetType().GetField("_solved", BindingFlags.NonPublic | BindingFlags.Instance)
             )).Compile();
 
-        while(!tdsolved())
+        while (!tdsolved())
             yield return null;
 
         _tdNoSubmit = true;
@@ -517,10 +558,10 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         do
         {
             pm = FindObjectsOfType(typeof(MonoBehaviour)).FirstOrDefault(m => ((MonoBehaviour)m).isActiveAndEnabled && m.GetType().Name == "PolyhedralMazeModule") as MonoBehaviour;
-            if(pm == null)
+            if (pm == null)
                 yield return null;
         }
-        while(pm == null);
+        while (pm == null);
 
         Func<bool> pmsolved = Expression.Lambda<Func<bool>>(
             Expression.Field(
@@ -528,7 +569,7 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
                 pm.GetType().GetField("_isSolved", BindingFlags.NonPublic | BindingFlags.Instance)
             )).Compile();
 
-        while(!pmsolved())
+        while (!pmsolved())
             yield return null;
 
         List<int> _numbers = Enumerable.Range(62, 27).ToList();
@@ -552,14 +593,14 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
     private static readonly Dictionary<int, bool[]> _ssDigits = "0#####-#|1#--#---|2-###-##|3#-##-##|4#--###-|5#-#-###|6###-###|7#--#--#|8#######|9#-#####".Split('|').ToDictionary(s => s[0] - '0', s => s.Skip(1).Select(c => c == '#').ToArray());
     private static void SetPolySSD(Transform digit, int x)
     {
-        for(int i = 0; i < 7; ++i)
+        for (int i = 0; i < 7; ++i)
             digit.GetChild(i).gameObject.SetActive(_ssDigits[x][i]);
     }
 
     private static IEnumerator EnsureHarmony()
     {
         Debug.Log("[Totally Normal Sequence Bombs] Version " + VersionString);
-        if(_harmed)
+        if (_harmed)
             yield break;
 
         _harmed = true;
@@ -571,10 +612,10 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         do
         {
             t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("ThreeDTunnels", false)).FirstOrDefault(tp => tp != null);
-            if(t == null)
+            if (t == null)
                 yield return null;
         }
-        while(t == null);
+        while (t == null);
         MethodInfo m = t.GetMethod("PressTargetButton", BindingFlags.NonPublic | BindingFlags.Instance);
         MethodInfo p = typeof(TotallyNotSussyServiceScript).GetMethod("TDTPrefix", BindingFlags.NonPublic | BindingFlags.Static);
         h.Patch(m, prefix: new HarmonyMethod(p));
@@ -586,10 +627,10 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         do
         {
             t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("FastMathModule", false)).FirstOrDefault(tp => tp != null);
-            if(t == null)
+            if (t == null)
                 yield return null;
         }
-        while(t == null);
+        while (t == null);
         m = t.GetMethod("Init", BindingFlags.NonPublic | BindingFlags.Instance);
         p = typeof(TotallyNotSussyServiceScript).GetMethod("FMReset", BindingFlags.NonPublic | BindingFlags.Static);
         h.Patch(m, postfix: new HarmonyMethod(p));
@@ -602,10 +643,10 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         do
         {
             t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("TwoBitsModule", false)).FirstOrDefault(tp => tp != null);
-            if(t == null)
+            if (t == null)
                 yield return null;
         }
-        while(t == null);
+        while (t == null);
         m = t.GetMethod("OnSubmit", BindingFlags.NonPublic | BindingFlags.Instance);
         p = typeof(TotallyNotSussyServiceScript).GetMethod("TBSubmit", BindingFlags.NonPublic | BindingFlags.Static);
         h.Patch(m, prefix: new HarmonyMethod(p));
@@ -614,10 +655,10 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         do
         {
             t = AppDomain.CurrentDomain.GetAssemblies().Select(asm => asm.GetType("MorseCodeComponent", false)).FirstOrDefault(tp => tp != null);
-            if(t == null)
+            if (t == null)
                 yield return null;
         }
-        while(t == null);
+        while (t == null);
         m = t.GetNestedType("\u003CLoopRoutine\u003Ec__Iterator0", BindingFlags.NonPublic).GetMethod("MoveNext", BindingFlags.Public | BindingFlags.Instance);
         p = typeof(TotallyNotSussyServiceScript).GetMethod("MCLoop", BindingFlags.NonPublic | BindingFlags.Static);
         h.Patch(m, transpiler: new HarmonyMethod(p));
@@ -629,17 +670,17 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
         FieldInfo fi = t.GetField("IsSolved", BindingFlags.Public | BindingFlags.Instance);
 
         MethodInfo mi = typeof(TotallyNotSussyServiceScript).GetMethod("MCShenanigans", BindingFlags.NonPublic | BindingFlags.Static);
-        foreach(CodeInstruction inst in instructions)
+        foreach (CodeInstruction inst in instructions)
         {
             yield return inst;
-            if(inst.Is(OpCodes.Ldfld, fi))
+            if (inst.Is(OpCodes.Ldfld, fi))
                 yield return new CodeInstruction(OpCodes.Call, mi);
         }
     }
 
     private static bool MCShenanigans(bool i)
     {
-        if(_isMission)
+        if (_isMission)
             return false;
         return i;
     }
@@ -651,10 +692,10 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
 
         MethodInfo mi = typeof(TotallyNotSussyServiceScript).GetMethod("FMRandom", BindingFlags.Public | BindingFlags.Static);
         IEnumerator<CodeInstruction> enu = instructions.GetEnumerator();
-        while(enu.MoveNext())
+        while (enu.MoveNext())
         {
             yield return enu.Current;
-            if(enu.Current.Is(OpCodes.Ldc_I4_S, 13))
+            if (enu.Current.Is(OpCodes.Ldc_I4_S, 13))
             {
                 enu.MoveNext();
                 yield return new CodeInstruction(OpCodes.Ldarg_0);
@@ -666,16 +707,16 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
 
     public static int FMRandom(int lower, int upper, string letters)
     {
-        if(!_isMission)
+        if (!_isMission)
             return Random.Range(lower, upper);
 
-        if(letters.All(c => !"BCDEGKPTVZ".Contains(c)))
+        if (letters.All(c => !"BCDEGKPTVZ".Contains(c)))
             throw new NotSupportedException("Why are you using rule seed?");
 
         int res;
         do
             res = Random.Range(lower, upper);
-        while(!"BCDEGKPTVZ".Contains(letters[res]));
+        while (!"BCDEGKPTVZ".Contains(letters[res]));
         return res;
     }
 
@@ -686,7 +727,7 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
 
     private static void FMStage(int num, TextMesh ___Screen)
     {
-        if(num == 1)
+        if (num == 1)
             _fmStages = new List<string>();
         _fmStages.Add(___Screen.text);
     }
@@ -703,17 +744,18 @@ public class TotallyNotSussyServiceScript : MonoBehaviour
 
     private static void TDTChange(TextMesh ___Symbol, int ____location)
     {
-        if(_tdNoSubmit)
+        if (_tdNoSubmit)
             ___Symbol.gameObject.SetActive(false);
         _tdChange(____location);
     }
 
     private IEnumerator DoHook()
     {
+        StartCoroutine(ModifyGeneration());
         do
         {
             yield return new WaitForSeconds(1f);
         }
-        while(!ModdedAPI.TrySet("LoadOnCondition", _module));
+        while (!ModdedAPI.TrySet("LoadOnCondition", _module));
     }
 }
